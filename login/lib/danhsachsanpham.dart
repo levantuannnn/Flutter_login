@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:login/api.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -9,109 +8,25 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<String> _productImages = [];
-  String _title = '';
-  String _description = '';
-  double _price = 0;
-  double _discountPercentage = 0;
-  double _rating = 0;
-  int _stock = 0;
-  String _brand = '';
-  String _category = '';
-  bool _isLoading = true;
-  String? _errorMessage;
+  // Danh sách ảnh sản phẩm để vuốt ngang
+  final List<String> _productImages = [
+    'https://picsum.photos/id/1/800/800',
+    'https://picsum.photos/id/2/800/800',
+    'https://picsum.photos/id/3/800/800',
+  ];
 
   int _currentImageIndex = 0;
   bool _isFavorite = false;
   bool _isDescriptionExpanded = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadProduct();
-  }
-
-  Future<void> _loadProduct() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final product = await layMotSanPham();
-      print(product['title']);
-      print(product['price']);
-      if (!mounted) return;
-
-      setState(() {
-        _title = product['title']?.toString() ?? '';
-        _description = product['description']?.toString() ?? '';
-        _price = (product['price'] as num?)?.toDouble() ?? 0;
-        _discountPercentage =
-            (product['discountPercentage'] as num?)?.toDouble() ?? 0;
-        _rating = (product['rating'] as num?)?.toDouble() ?? 0;
-        _stock = (product['stock'] as num?)?.toInt() ?? 0;
-        _brand = product['brand']?.toString() ?? '';
-        _category = product['category']?.toString() ?? '';
-        _productImages
-          ..clear()
-          ..addAll(
-            ((product['images'] as List?) ?? const [])
-                .map((image) => image.toString())
-                .where((image) => image.isNotEmpty),
-          );
-        _currentImageIndex = 0;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _errorMessage = 'Không thể tải dữ liệu: $e';
-        _isLoading = false;
-      });
-    }
-  }
-
-  String _formatPrice(double price) {
-    final value = price
-        .toStringAsFixed(0)
-        .replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (match) => '${match[1]},',
-        );
-    return '$value đ';
-  }
+  final String _fullDescription =
+      'Sản phẩm sở hữu thiết kế nguyên khối sang trọng với khung viền titan siêu bền bỉ, trọng lượng nhẹ giúp cầm nắm thoải mái suốt cả ngày dài. '
+      'Màn hình công nghệ OLED sắc nét với tần số quét thích ứng 120Hz mang lại trải nghiệm vuốt chạm mượt mà và hình ảnh sống động dưới mọi điều kiện ánh sáng. '
+      'Hệ thống camera chuyên nghiệp tích hợp thuật toán xử lý hình ảnh thế hệ mới cho phép chụp thiếu sáng ấn tượng, quay video độ phân giải cao chống rung quang học. '
+      'Dung lượng pin lớn kết hợp công nghệ sạc nhanh tiên tiến giúp bạn yên tâm làm việc và giải trí liên tục mà không bị gián đoạn.';
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    if (_errorMessage != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Chi tiết sản phẩm')),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
-                const SizedBox(height: 12),
-                Text(_errorMessage!, textAlign: TextAlign.center),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _loadProduct,
-                  child: const Text('Thử lại'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       // Yêu cầu 3: Dùng CustomScrollView + SliverAppBar để ảnh co lại thành thanh tiêu đề khi cuộn xuống
@@ -133,11 +48,8 @@ class _MyHomePageState extends State<MyHomePage> {
               child: CircleAvatar(
                 backgroundColor: Colors.white.withOpacity(0.85),
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back_ios_new,
-                    size: 18,
-                    color: Colors.black87,
-                  ),
+                  icon: const Icon(Icons.arrow_back_ios_new,
+                      size: 18, color: Colors.black87),
                   onPressed: () {
                     if (Navigator.canPop(context)) {
                       Navigator.pop(context);
@@ -184,8 +96,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         _productImages[index],
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            const ColoredBox(color: Color(0xFFECECEC)),
                       );
                     },
                   ),
@@ -194,9 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     bottom: 16.0,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.25),
                         borderRadius: BorderRadius.circular(20),
@@ -234,9 +142,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Tên sản phẩm
-                  Text(
-                    _title,
-                    style: const TextStyle(
+                  const Text(
+                    'Điện thoại Flagship Pro Max 256GB - Chính hãng VN/A',
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       height: 1.3,
@@ -257,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${_rating.toStringAsFixed(1)} • còn $_stock sản phẩm',
+                        '4.8 • 1.2k đánh giá',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 13,
@@ -270,9 +178,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   // Giá bán & Badge giảm giá
                   Row(
                     children: [
-                      Text(
-                        _formatPrice(_price),
-                        style: const TextStyle(
+                      const Text(
+                        '21.990.000 đ',
+                        style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0D3B7A),
@@ -281,16 +189,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE65100),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Text(
-                          '-${_discountPercentage.toStringAsFixed(0)}%',
-                          style: const TextStyle(
+                        child: const Text(
+                          '-25%',
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
@@ -305,11 +211,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   // Yêu cầu 4: Phần mô tả dài có nút "Xem thêm" để mở rộng
                   const Text(
                     'Mô tả sản phẩm',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _description,
+                    _fullDescription,
                     maxLines: _isDescriptionExpanded ? null : 3,
                     overflow: _isDescriptionExpanded
                         ? TextOverflow.visible
@@ -346,22 +255,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   const Divider(height: 24),
 
+                  // Thêm thông số kỹ thuật mẫu để tạo độ dài giúp kiểm tra hiệu ứng cuộn SliverAppBar
                   const Text(
                     'Thông số kỹ thuật nổi bật',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
-                  ...[
-                    ('Thương hiệu', _brand.isEmpty ? 'Đang cập nhật' : _brand),
-                    (
-                      'Danh mục',
-                      _category.isEmpty ? 'Đang cập nhật' : _category,
-                    ),
-                    ('Tồn kho', '$_stock sản phẩm'),
-                    ('Giảm giá', '${_discountPercentage.toStringAsFixed(1)}%'),
-                    ('Đánh giá', '${_rating.toStringAsFixed(1)} / 5'),
-                  ].map(
-                    (item) => Container(
+                  ...List.generate(
+                    6,
+                    (index) => Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
@@ -371,14 +276,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            item.$1,
-                            style: TextStyle(color: Colors.grey.shade700),
-                          ),
-                          Text(
-                            item.$2,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
+                          Text('Thông số ${index + 1}',
+                              style: TextStyle(color: Colors.grey.shade700)),
+                          const Text('Tiêu chuẩn cao cấp',
+                              style: TextStyle(fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -404,10 +305,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 10.0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
             child: Row(
               children: [
                 Expanded(
@@ -445,9 +343,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Chuyển sang thanh toán...'),
-                        ),
+                        const SnackBar(content: Text('Chuyển sang thanh toán...')),
                       );
                     },
                     child: const Text(

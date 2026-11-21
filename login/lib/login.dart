@@ -1,6 +1,6 @@
-import 'package:app_nhom3/forgetpassword.dart';
-import 'package:app_nhom3/register.dart';
-import 'package:app_nhom3/setting.dart';
+import 'package:login/forgetpassword.dart';
+import 'package:login/register.dart';
+import 'package:login/setting.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {

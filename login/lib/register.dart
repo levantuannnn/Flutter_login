@@ -1,4 +1,4 @@
-import 'package:app_nhom3/login.dart';
+import 'package:login/login.dart';
 import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatefulWidget {
