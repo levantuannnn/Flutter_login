@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:login/api.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -8,6 +9,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  List<Map<String, dynamic>> _products = [];
+  bool _isLoadingProducts = false;
+  String? _productsError;
+
   // Danh sách ảnh sản phẩm để vuốt ngang
   final List<String> _productImages = [
     'https://picsum.photos/id/1/800/800',
@@ -18,6 +23,33 @@ class _MyHomePageState extends State<MyHomePage> {
   int _currentImageIndex = 0;
   bool _isFavorite = false;
   bool _isDescriptionExpanded = false;
+
+  Future<void> _loadProducts() async {
+    setState(() {
+      _isLoadingProducts = true;
+      _productsError = null;
+    });
+
+    try {
+      final products = await layDanhSachSanPham();
+      if (!mounted) return;
+
+      setState(() {
+        _products = products;
+        _isLoadingProducts = false;
+      });
+
+      for (final product in products) {
+        debugPrint('${product['title']}: ${product['price']} USD');
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _productsError = 'Không thể tải sản phẩm: $error';
+        _isLoadingProducts = false;
+      });
+    }
+  }
 
   final String _fullDescription =
       'Sản phẩm sở hữu thiết kế nguyên khối sang trọng với khung viền titan siêu bền bỉ, trọng lượng nhẹ giúp cầm nắm thoải mái suốt cả ngày dài. '
@@ -48,8 +80,11 @@ class _MyHomePageState extends State<MyHomePage> {
               child: CircleAvatar(
                 backgroundColor: Colors.white.withOpacity(0.85),
                 child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new,
-                      size: 18, color: Colors.black87),
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new,
+                    size: 18,
+                    color: Colors.black87,
+                  ),
                   onPressed: () {
                     if (Navigator.canPop(context)) {
                       Navigator.pop(context);
@@ -104,7 +139,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     bottom: 16.0,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.25),
                         borderRadius: BorderRadius.circular(20),
@@ -141,6 +178,39 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const Text(
+                    'Danh sách sản phẩm từ API',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: _isLoadingProducts ? null : _loadProducts,
+                    child: Text(
+                      _isLoadingProducts ? 'Đang tải...' : 'Gọi API sản phẩm',
+                    ),
+                  ),
+                  if (_productsError != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _productsError!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ],
+                  if (_products.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    ..._products.map(
+                      (product) => Card(
+                        child: ListTile(
+                          title: Text(product['title']?.toString() ?? ''),
+                          subtitle: Text(
+                            '${product['price']} USD • ${product['category'] ?? ''}',
+                          ),
+                          leading: const Icon(Icons.shopping_bag_outlined),
+                        ),
+                      ),
+                    ),
+                  ],
+                  const Divider(height: 32),
                   // Tên sản phẩm
                   const Text(
                     'Điện thoại Flagship Pro Max 256GB - Chính hãng VN/A',
@@ -189,7 +259,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFE65100),
                           borderRadius: BorderRadius.circular(12),
@@ -211,10 +283,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   // Yêu cầu 4: Phần mô tả dài có nút "Xem thêm" để mở rộng
                   const Text(
                     'Mô tả sản phẩm',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -258,10 +327,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   // Thêm thông số kỹ thuật mẫu để tạo độ dài giúp kiểm tra hiệu ứng cuộn SliverAppBar
                   const Text(
                     'Thông số kỹ thuật nổi bật',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   ...List.generate(
@@ -276,10 +342,14 @@ class _MyHomePageState extends State<MyHomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Thông số ${index + 1}',
-                              style: TextStyle(color: Colors.grey.shade700)),
-                          const Text('Tiêu chuẩn cao cấp',
-                              style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text(
+                            'Thông số ${index + 1}',
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                          const Text(
+                            'Tiêu chuẩn cao cấp',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
                         ],
                       ),
                     ),
@@ -305,7 +375,10 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 10.0,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -343,7 +416,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Chuyển sang thanh toán...')),
+                        const SnackBar(
+                          content: Text('Chuyển sang thanh toán...'),
+                        ),
                       );
                     },
                     child: const Text(
